@@ -1,26 +1,26 @@
 using Random
 
 """
-    nmoons(T, n, c) -> (Matrix{T}, Vector{Int})
+    nmoons(T, n, c; kwargs...) -> (Matrix{T}, Vector{Int})
 
 Generate a half-moon dataset.
 
 Parameters:
 - `T`: data type for points' coordinates
-- `n`: number of samples in the resulting dataset
+- `m`: number of samples per structure
 - `c`: number of half-circle subsets in the generated dataset
 
 Keyword parameters:
-- `ε`: variance of a random Gaussian noise
 - `d`: dimension of the full space
-- `translation`: half-circle subsets translation parameters (must be of size `d`)
-- `rotations`: dataset rotation parameters. Each rotation is specified as angle between particular pair of axis
+- `ε`: variance of a random Gaussian noise
+- `translation::Vector{T}`: half-circle subsets translation parameters (must be of size `d`)
+- `rotations::Dict{Pair{Int,Int},T}`: dataset rotation parameters. Each rotation is specified as angle between particular pair of axis
 - `shuffle`: perform point shuffling in the dataset, default value `true`
 - `seed`: RNG seed value (if it's `nothing` then RNG will not be initialized), default value `nothing`
 
 Here is an example of dataset generation:
 ```jldoctest
-julia> X, L = nmoons(Float64, 100, 2,        # Generate 100 Float64 points divided on two susbsets
+julia> X, L = nmoons(Float64, 100, 2,        # Generate 200 Float64 points divided on two susbsets
                      ε=0.0, d=3,             # in 3D space with no noise
                      translation=[0.25;0;0], # translated from origin
                      rotations=Dict((1=>3)=>π/3, (1=>2)=>-π/3)); # rotated 30° from X to Z, -30° from X to Y
@@ -32,13 +32,14 @@ julia> X
  0.433013   0.431233   0.425903      1.29193    1.29726    1.29904
 ```
 """
-function nmoons(::Type{T}, n::Int=100, c::Int=2;
+function nmoons(::Type{T}, m::Int=100, c::Int=2;
                 shuffle::Bool=false, ε::Real=0.1, d::Int = 2,
                 translation::Vector{T}=zeros(T, d),
                 rotations::Dict{Pair{Int,Int},T} = Dict{Pair{Int,Int},T}(),
                 seed::Union{Int,Nothing}=nothing) where {T <: Real}
     rng = seed === nothing ? Random.GLOBAL_RNG : MersenneTwister(Int(seed))
-    ssize = floor(Int, n/c)
+    n = c*m
+    ssize = floor(Int, m)
     ssizes = fill(ssize, c)
     ssizes[end] += n - ssize*c
     @assert sum(ssizes) == n "Incorrect partitioning"
@@ -46,8 +47,9 @@ function nmoons(::Type{T}, n::Int=100, c::Int=2;
     R(θ) = [cos(θ) -sin(θ); sin(θ) cos(θ)]
     X = zeros(d,0)
     for (i, s) in enumerate(ssizes)
-        circ_x = cos.(range(zero(T), pi, length=s)).-1.0
-        circ_y = sin.(range(zero(T), pi, length=s))
+        pts = range(zero(T), pi, length=s)
+        circ_x = cos.(pts).-1.0
+        circ_y = sin.(pts)
         C = R(-(i-1)*(2*pi/c)) * hcat(circ_x, circ_y)'
         C = vcat(C, zeros(d-2, s))
         dir = zeros(d)-C[:,end] # translation direction
@@ -62,9 +64,6 @@ function nmoons(::Type{T}, n::Int=100, c::Int=2;
     end
     # Add noise to the dataset
     if ε > 0.0
-        #using Distributions
-        #Nz = Normal(zero(T), convert(T,ε/d))
-        #X += rand(rng, Nz, size(X))
         X += randn(rng, size(X)).*convert(T,ε/d)
     end
     # Rotate dataset
