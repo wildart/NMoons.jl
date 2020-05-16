@@ -12,9 +12,10 @@ Parameters:
 
 Keyword parameters:
 - `d`: dimension of the full space
+- `r`: radius of the half-circle
 - `ε`: variance of a random Gaussian noise
 - `translation::Vector{T}`: half-circle subsets translation parameters (must be of size `d`)
-- `rotations::Dict{Pair{Int,Int},T}`: dataset rotation parameters. Each rotation is specified as angle between particular pair of axis
+- `rotations::Dict{Pair{Int,Int},T}`: dataset rotation parameters. Each rotation is specified as angle between particular pair of axes
 - `shuffle`: perform point shuffling in the dataset, default value `true`
 - `seed`: RNG seed value (if it's `nothing` then RNG will not be initialized), default value `nothing`
 
@@ -33,7 +34,7 @@ julia> X
 ```
 """
 function nmoons(::Type{T}, m::Int=100, c::Int=2;
-                shuffle::Bool=false, ε::Real=0.1, d::Int = 2,
+                shuffle::Bool=false, ε::Real=0.1, d::Int = 2, r::Real=1.0,
                 translation::Vector{T}=zeros(T, d),
                 rotations::Dict{Pair{Int,Int},T} = Dict{Pair{Int,Int},T}(),
                 seed::Union{Int,Nothing}=nothing) where {T <: Real}
@@ -52,21 +53,25 @@ function nmoons(::Type{T}, m::Int=100, c::Int=2;
         circ_y = sin.(pts)
         C = R(-(i-1)*(2*pi/c)) * hcat(circ_x, circ_y)'
         C = vcat(C, zeros(d-2, s))
-        dir = zeros(d)-C[:,end] # translation direction
-        #dir ./= abs(sum(dir))
-        @debug "Dimension $i"  direction=dir
-        X = hcat(X, C .+ dir.*translation)
+        dir = C[:,end]-zeros(d) # translation direction
+        dir ./= abs(sum(dir))   # normalize directions
+        @debug "Dimension $i"  dir="$dir" farthest="$(C[:,end])"
+        translate = dir.*r.*translation
+        @debug "Translation $i"  translate="$translate"
+        X = hcat(X, C .+ translate)
     end
+    # generate labels
     y = vcat([fill(i,s) for (i,s) in enumerate(ssizes)]...)
+    # shuffle points
     if shuffle
         idx = randperm(rng, n)
         X, y = X[:, idx], y[idx]
     end
-    # Add noise to the dataset
+    # add noise to the dataset
     if ε > 0.0
         X += randn(rng, size(X)).*convert(T,ε/d)
     end
-    # Rotate dataset
+    # rotate dataset
     for ((i,j),θ) in rotations
         X[[i,j],:] .= R(θ)*view(X,[i,j],:)
     end

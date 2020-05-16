@@ -21,13 +21,11 @@ the diameter distance from the origin, first point. The translation vector conta
 that are used to control direction and magnitude of the cluster translation.
 
 We scale the direction vector by translation parameters for every cluster in the dataset.
-The original TM dataset has one cluster moved along the x-axis at the radius length.
-
-E.g. using translation vector with values [ 0.25, 0.0 ], we simultaneously move both clusters
-away from each other on distance of the quarter of the diameter of half-circle, which
-results in total translation of half-circle clusters against each other at the distance of
-one radius on x-axis. The dimension of the translation vector is the same as the space
-dimension.
+The original "Two Moons" dataset has one cluster moved along the `x`-axis at the radius
+length. Using translation vector with values `[ 0.5, 0.0 ]`, we simultaneously move
+both clusters away from each other on distance of the half of the radius of half-circle,
+`r/2`, which results in total translation of half-circle clusters against each other
+at the distance of one radius on `x`-axis. The dimension of the translation vector is the same as the space dimension.
 
 The half-circle is a one dimensional structure in the two dimensional space, but for
 testing algorithms’ properties in high dimensions, we create zero points in `d`-dimensional
