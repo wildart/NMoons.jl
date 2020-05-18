@@ -1,11 +1,11 @@
 """
-    nmoons(T, n, c; kwargs...) -> (Matrix{T}, Vector{Int})
+    nmoons(T, m, c; kwargs...) -> (Matrix{T}, Vector{Int})
 
 Generate a half-moon dataset.
 
 Parameters:
 - `T`: data type for points' coordinates
-- `m`: number of samples per structure
+- `m`: number of samples in the subset
 - `c`: number of half-circle subsets in the generated dataset
 
 Keyword parameters:
