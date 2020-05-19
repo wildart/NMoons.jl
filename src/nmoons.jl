@@ -38,11 +38,11 @@ function nmoons(::Type{T}, m::Int=100, c::Int=2;
                 repulse::Tuple{T,T}=(zero(T),zero(T)),
                 translation::Vector{T}=fill(zero(T),d),
                 rotations::Dict{Pair{Int,Int},T} = Dict{Pair{Int,Int},T}(),
-                seed::Union{Int,Nothing}=nothing) where {T <: Real}
+                seed::Union{Integer,Nothing}=nothing) where {T <: Real}
     @assert d > 1 "The ambient dimention must be grater than 1"
     @assert length(translation) == d "The dimension of the translation vector must be $d"
 
-    rng = seed === nothing ? Random.GLOBAL_RNG : MersenneTwister(Int(seed))
+    rng = seed === nothing ? Random.GLOBAL_RNG : MersenneTwister(seed)
     n = c*m
     ssizes = fill(m, c)
     ssizes[end] += n - m*c
@@ -54,10 +54,12 @@ function nmoons(::Type{T}, m::Int=100, c::Int=2;
         circ_x = cos.(pts).-1.0
         circ_y = sin.(pts)
         C = rotate2d(-(i-1)*(2*pi/c)) * hcat(circ_x, circ_y)'
-        dir = C[:,end] # repulsion direction from origin
+        Xtr = extrema(C,dims=2)
+        @debug "X extrema: " extrema=Xtr
+        dir = sum.(Xtr) # repulsion direction from origin
         dir ./= abs(sum(dir))   # normalize directions
         @debug "Half-circle $i"  dir="$dir"
-        translate = dir.*r.*repulse
+        translate = dir.*r.*collect(repulse)
         @debug "Repulse $i"  translate="$translate"
         C = vcat(C .+ translate, zeros(d-2, s)) # translate & pad coordinates with 0s
         X = hcat(X, C)

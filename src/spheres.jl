@@ -38,11 +38,11 @@ function spheres(::Type{T}, m::Int=100, c::Int=2; s=1,
                  translation::Vector{T}=fill(zero(T),d),
                  arrange::Tuple{T,T}=(zero(T),zero(T)),
                  rotations::Dict{Pair{Int,Int},T} = Dict{Pair{Int,Int},T}(),
-                 seed::Union{Int,Nothing}=nothing) where {T <: Real}
+                 seed::Union{Integer,Nothing}=nothing) where {T <: Real}
     @assert d > 1 "Ambient dimention must be grater than 1"
     @assert s < d "Sphere dimension cannot be large then the ambient space dimension"
 
-    rng = seed === nothing ? Random.GLOBAL_RNG : MersenneTwister(Int(seed))
+    rng = seed === nothing ? Random.GLOBAL_RNG : MersenneTwister(seed)
 
     # setup subsets' sizes
     n = c*m
