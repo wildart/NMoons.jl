@@ -18,6 +18,11 @@ Keyword parameters:
 - `shuffle`: perform point shuffling in the dataset, default value `true`
 - `seed`: RNG seed value (if it's `nothing` then RNG will not be initialized), default value `nothing`
 
+If the `rotations` specified as collection of `p => q => θ` pairs such that from axis of the dimension `p` rotation is perfomed
+towards to the axis of dimension `q` on a radian value `θ`.
+- if `p = q != 0` then `p` rotations between arbitrary pair of axis performed with angle chosen uniformly from range [0, θ].
+- if `p = q = 0` then `d(d-1)/2` arbitrary rotations performed with angle chosen uniformly from range [0, θ].
+
 Here is an example of dataset generation:
 ```jldoctest
 julia> X, L = nmoons(Float64, 100, 2,      # Generate 200 Float64 points divided on two susbsets
@@ -51,8 +56,8 @@ function nmoons(::Type{T}, m::Int=100, c::Int=2;
     X = zeros(d,0)
     for (i, s) in enumerate(ssizes)
         pts = range(zero(T), pi, length=s)
-        circ_x = cos.(pts).-1.0
-        circ_y = sin.(pts)
+        circ_x = r.*(cos.(pts).-1.0)
+        circ_y = r.*sin.(pts)
         C = rotate2d(-(i-1)*(2*pi/c)) * hcat(circ_x, circ_y)'
         Xtr = extrema(C,dims=2)
         @debug "X extrema: " extrema=Xtr
@@ -76,9 +81,7 @@ function nmoons(::Type{T}, m::Int=100, c::Int=2;
         X += randn(rng, size(X)).*convert(T,ε/d)
     end
     # rotate dataset
-    for ((i,j),θ) in rotations
-        X[[i,j],:] .= rotate2d(θ)*view(X,[i,j],:)
-    end
+    rotate!(X, rotations)
     # translate dataset
     X .+= translation
     return X, y

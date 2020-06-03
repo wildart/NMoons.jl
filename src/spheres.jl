@@ -18,6 +18,11 @@ Keyword parameters:
 - `shuffle`: perform point shuffling in the dataset, default value `true`
 - `seed`: RNG seed value (if it's `nothing` then RNG will not be initialized), default value `nothing`
 
+If the `rotations` specified as collection of `p => q => θ` pairs such that from axis of the dimension `p` rotation is perfomed
+towards to the axis of dimension `q` on a radian value `θ`.
+- if `p = q != 0` then `p` rotations between arbitrary pair of axis performed with angle chosen uniformly from range [0, θ].
+- if `p = q = 0` then `d(d-1)/2` arbitrary rotations performed with angle chosen uniformly from range [0, θ].
+
 Here is an example of dataset generation:
 ```jldoctest
 julia> X, L = spheres(Float64, 100, 2,        # Generate 100 Float64 points divided on two susbsets
@@ -92,9 +97,7 @@ function spheres(::Type{T}, m::Int=100, c::Int=2; s=1,
         X += randn(rng, size(X)).*convert(T,ε/d)
     end
     # rotate dataset
-    for ((i,j),θ) in rotations
-        X[[i,j],:] .= rotate2d(θ)*view(X,[i,j],:)
-    end
+    rotate!(X, rotations)
     # translate dataset
     X .+= translation
     return X, y
