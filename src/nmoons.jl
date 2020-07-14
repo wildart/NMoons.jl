@@ -58,11 +58,10 @@ function nmoons(::Type{T}, m::Int=100, c::Int=2;
         pts = range(zero(T), pi, length=s)
         circ_x = r.*(cos.(pts).-1.0)
         circ_y = r.*sin.(pts)
-        C = rotate2d(-(i-1)*(2*pi/c)) * hcat(circ_x, circ_y)'
-        Xtr = extrema(C,dims=2)
-        @debug "X extrema: " extrema=Xtr
-        dir = sum.(Xtr) # repulsion direction from origin
+        R = rotate2d(-(i-1)*(2*pi/c))
+        dir=R*[-2,1.0]
         dir ./= abs(sum(dir))   # normalize directions
+        C = R * hcat(circ_x, circ_y)'
         @debug "Half-circle $i"  dir="$dir"
         translate = dir.*r.*collect(repulse)
         @debug "Repulse $i"  translate="$translate"

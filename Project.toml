@@ -3,7 +3,7 @@ uuid = "4dcdcac4-97b3-11ea-1633-e9fe81e35949"
 keywords = ["synthetic dataset generator", "dataset generator"]
 license = "MIT"
 repository = "https://github.com/wildart/NMoons.jl.git"
-version = "1.0.2"
+version = "1.0.3"
 
 [deps]
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
